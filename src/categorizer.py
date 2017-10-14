@@ -4,6 +4,7 @@ from string import digits
 from argparse import ArgumentParser
 from collections import Counter
 
+# N-gram based text categorizer
 class Categorizer:
     def __init__(self, profileLength=None, n_grams=None, forceChoice=None):
         self.profiles = []
@@ -14,12 +15,17 @@ class Categorizer:
     # Retrieves a profilable text from a file
     def _get_text(self, file):
         text = ""
-        punctuations = '''[](){}⟨⟩:,‒–—―…!.‐-?‘’“”'\";/⁄&*@\\•^°¡¿#№÷×%‰+−=¶§~_|‖¦<>'''
         with open(file, "r") as text_file:
             text = text_file.read()
             text = text.replace('\n', ' ')
             # Remove all punctuation and digits
+            punctuations = '''[](){}⟨⟩:,‒–—―…!.‐-?‘’“”'\";/⁄&*@\\•^°¡¿#№÷×%‰+−=¶§~_|‖¦<>'''
             text = text.translate(str.maketrans("", "", punctuations + digits))
+
+            # Why doesnt the replace behave the same as above?
+            #text = text.replace('''[](){}⟨⟩:,‒–—―…!.‐-?‘’“”'\";/⁄&*@\\•^°¡¿#№÷×%‰+−=¶§~_|‖¦<>''' + digits, '')
+
+
             # Remove possible multiple spaces between words
             text = ' '.join(text.split())
             text = text.replace(' ', '_')
@@ -34,20 +40,37 @@ class Categorizer:
             profile += zip(*[text[i:] for i in range(n)])
 
         profile = Counter(profile).most_common(self.profileLength)
-        return profile
+        return [gram for gram, frequency in profile]
 
-    def _calc_dist(self, a, b):
-        return 0
+    # Calculate distance between 2 profiles. Simple "out-of-place" counting
+    def _get_dist(self, a, b):
+        sum = 0
+        print(a[0])
+        for index, val in enumerate(b):
+            try:
+                sum += abs(index - a.index(val))
+            except ValueError as exception:
+                sum += self.profileLength * 1.2
+        return sum
 
+    # Create profiles for all txt files from directory. File names are used for category creation
     def create_profiles(self, dir):
         for file in listdir(dir):
             if file.endswith(".txt"):
                 self.profiles.append((file.rstrip(".txt"), self._create_profile(self._get_text(dir+file))))
 
+    # Return suggested categories for the inserted file
     def categorize(self, file):
         profile = self._create_profile(self._get_text(file))
+        suggestions = []
+        for p_name, p in self.profiles:
+            dist = self._get_dist(profile, p)
+            print(dist // self.profileLength)
+            # Suggest tag if average dist is less than ...
+            if dist // self.profileLength < self.profileLength // 2:
+                suggestions.append(p_name)
 
-        print("NOT READY")
+        return suggestions
 
 
 if __name__ == '__main__':
@@ -60,6 +83,7 @@ if __name__ == '__main__':
     argumentParser.add_argument("-verbose", action="store_true", help="Verbose print")
     args = argumentParser.parse_args()
 
-    categorizer = Categorizer(args.pl, args.ng, args.force)
+    categorizer = Categorizer()
+    #categorizer = Categorizer(args.pl, args.ng, args.force)
     if(args.pf): categorizer.create_profiles(args.pf)
     if(args.f): print(categorizer.categorize(args.f))
