@@ -42,7 +42,10 @@ class Categorizer:
         profile = Counter(profile).most_common(self.profileLength)
         return [gram for gram, frequency in profile]
 
-    # Calculate distance between 2 profiles. Simple "out-of-place" counting
+    # Calculate distance between 2 profiles.
+    # Simple "out-of-place" counting - IN USE
+    # Wilcoxin rank test?
+    #
     def _get_dist(self, a, b):
         sum = 0
         print(a[0])
