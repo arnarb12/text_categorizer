@@ -1,5 +1,8 @@
 #!/usr/bin/python3
+from os import listdir
+from string import digits
 from argparse import ArgumentParser
+from collections import Counter
 
 class Categorizer:
     def __init__(self, profileLength=None, n_grams=None, forceChoice=None):
@@ -16,7 +19,7 @@ class Categorizer:
             text = text_file.read()
             text = text.replace('\n', ' ')
             # Remove all punctuation and digits
-            text = text.translate(str.maketrans("", "", punctuations + string.digits))
+            text = text.translate(str.maketrans("", "", punctuations + digits))
             # Remove possible multiple spaces between words
             text = ' '.join(text.split())
             text = text.replace(' ', '_')
@@ -30,18 +33,20 @@ class Categorizer:
         for n in range(self.n_grams):
             profile += zip(*[text[i:] for i in range(n)])
 
-        profile = Counter(profile)
+        profile = Counter(profile).most_common(self.profileLength)
         return profile
 
     def _calc_dist(self, a, b):
-        print("NOT READY")
+        return 0
 
     def create_profiles(self, dir):
-        for file in os.listdir(dir):
+        for file in listdir(dir):
             if file.endswith(".txt"):
-                self.profiles.append(file.rstrip(".txt"), _create_profile(get_text(dir+file)))
+                self.profiles.append((file.rstrip(".txt"), self._create_profile(self._get_text(dir+file))))
 
-    def categorize(self, path):
+    def categorize(self, file):
+        profile = self._create_profile(self._get_text(file))
+
         print("NOT READY")
 
 
@@ -57,7 +62,4 @@ if __name__ == '__main__':
 
     categorizer = Categorizer(args.pl, args.ng, args.force)
     if(args.pf): categorizer.create_profiles(args.pf)
-    if(args.f): categorizer.categorize(args.f)
-
-    print("Hello world")
-
+    if(args.f): print(categorizer.categorize(args.f))
